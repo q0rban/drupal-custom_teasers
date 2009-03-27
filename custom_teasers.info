@@ -1,0 +1,7 @@
+; $Id$
+name = Features
+description = A tool to feature content with views.
+dependencies[] = views
+dependencies[] = imagefield
+package = Views
+core = 6.x
