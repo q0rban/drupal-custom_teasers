@@ -134,7 +134,8 @@ function feature_form(&$node) {
 
   // Check to see if we've added this from another node.
   if (is_numeric($nid = arg(3))) {
-    list($form['feature_options']['reference_nid']['#type'], $form['reference_type']['#type']) = 'value';
+    $form['feature_options']['reference_nid']['#type'] = $form['feature_options']['reference_type']['#type'] = 'value';
+    unset($form['feature_options']['reference_path']);
     $form['feature_options']['reference_nid']['#value'] = $nid;
     $form['feature_options']['reference_type']['#value'] = 'nid';
   }
