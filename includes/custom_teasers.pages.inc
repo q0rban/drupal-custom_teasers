@@ -25,12 +25,12 @@ function custom_teasers_node_sort_overview() {
  /**
  * Re-order the display of feature nodes associated with this feature.
  */
-function custom_teasers_node_sort_form(&$form_state, $feature_name, $sort) {
+function custom_teasers_node_sort_form(&$form_state, $view_name, $sort) {
   $form = array();
 
   $form['nodes']['#tree'] = TRUE;
 
-  $result = db_query("SELECT f.weight, n.nid, n.title FROM {custom_teasers_node} f INNER JOIN {node} n ON f.nid = n.nid WHERE f.feature_name = '%s' ORDER BY f.weight ASC, n.created ". $sort, $feature_name);
+  $result = db_query("SELECT f.weight, n.nid, n.title FROM {custom_teasers_node} f INNER JOIN {node} n ON f.nid = n.nid WHERE f.view_name = '%s' ORDER BY f.weight ASC, n.created ". $sort, $view_name);
 
   while($node = db_fetch_object($result)) {
     $form['nodes'][$node->nid] = _custom_teasers_node_item($node);
@@ -275,7 +275,7 @@ function theme_custom_teasers_overview_form($form) {
  * @see custom_teasers_form_submit()
  * @see custom_teasers_form_delete()
  */
-function custom_teasers_form(&$form_state, $feature = array()) {
+function custom_teasers_view_form(&$form_state, $feature = array()) {
   module_load_include('inc', 'views', 'includes/admin');
 
   $form['feature'] = _custom_teasers_form($feature);

@@ -12,8 +12,6 @@
  */
 function custom_teasers_install() {
   drupal_install_schema('custom_teasers');
-
-  drupal_set_message(t('Please navigate to the <a href="@url">features settings page</a> to import the imagefield field into the feature content type.', array('@url' => url('admin/settings/custom_teasers'))));
 }
 
 /**
@@ -21,7 +19,7 @@ function custom_teasers_install() {
  */
 function custom_teasers_schema() {
   $schema['custom_teasers_node'] = array(
-    'description' => t('The feature node table.'),
+    'description' => t('The teaser node table.'),
     'fields' => array(
       'vid' => array(
         'type' => 'int',
@@ -35,7 +33,7 @@ function custom_teasers_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'feature_name' => array(
+      'view_name' => array(
         'type' => 'varchar',
         'length' => 32,
         'not null' => TRUE,
@@ -61,7 +59,7 @@ function custom_teasers_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => 'The path this feature links to.',
+        'description' => 'The path this teaser links to.',
       ),
       'weight' => array(
         'type' => 'int',
@@ -74,7 +72,7 @@ function custom_teasers_schema() {
     'primary key' => array('vid', 'nid'),
   );
   $schema['custom_teasers_view'] = array(
-    'description' => t('Stores features views settings.'),
+    'description' => t('Stores teaser view settings.'),
     'fields' => array(
       'name' => array(
         'type' => 'varchar',
@@ -142,7 +140,7 @@ function custom_teasers_schema() {
         'not null' => TRUE,
         'description' => t('Field name.'),
       ),
-      'feature_name' => array(
+      'view_name' => array(
         'type' => 'varchar',
         'length' => 32,
         'not null' => TRUE,
@@ -169,9 +167,53 @@ function custom_teasers_schema() {
         'description' => t("An array of alteration settings for the field."),
       ),
     ),
-    'primary key' => array('field_name', 'feature_name'),
+    'primary key' => array('field_name', 'view_name'),
   );
   return $schema;
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function custom_teasers_enable() {
+  module_load_include('inc', 'filefield', 'filefield_widget');
+  module_load_include('inc', 'imagefield', 'imagefield_widget');
+  if (function_exists('imagefield_widget_settings_save')) {
+    _custom_teasers_install_imagefield();
+  }
+}
+
+/**
+ * Helper function to install the cck imagefield.
+ */
+function _custom_teasers_install_imagefield() {
+  // Intro
+  $field = array();
+
+  $field['field_name'] = 'field_teaser_image';
+  $field['type_name'] = 'custom_teaser';
+  $field['type'] = 'filefield';
+  $field['module'] = 'filefield';
+  $field['widget_module'] = 'imagefield';
+  $field['required'] = TRUE;
+  $field['widget_type'] = 'imagefield_widget';
+  $field['active'] = TRUE;
+
+  $field['widget']['label'] = 'Teaser Image';
+  $field['widget']['weight'] = 1;
+  $field['widget']['type'] = 'imagefield_widget';
+  $field['widget']['file_extensions'] = 'jpg jpeg png gif';
+  $field['widget']['file_path'] = 'images/teaser';
+  $field['widget']['custom_alt'] = 0;
+  $field['widget']['custom_title'] = 0;
+  $field['widget']['required'] = 0;
+  $field['widget']['multiple'] = 0;
+  $field['widget']['list_field'] = 0;
+  $field['widget']['list_default'] = 1;
+  $field['widget']['description_field'] = 0;
+
+  module_load_include('inc', 'content', 'includes/content.crud');
+  content_field_instance_create($field);
 }
 
 /**
@@ -190,12 +232,12 @@ function custom_teasers_update_6100() {
   $ret = array();
 
   // Add our reference_path field
-  db_add_field($ret, 'custom_teasers_node', 'reference_path', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
+  db_add_field($ret, 'features_node', 'reference_path', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
 
-  // Update all feature nodes to use the path field.
-  $sql = db_query("SELECT vid, nid, reference_nid FROM {custom_teasers_node}");
-  while($feature = db_fetch_array($sql)) {
-    $ret[] = update_sql("UPDATE {custom_teasers_node} SET reference_type = 'nid', reference_path = 'node/{$feature['reference_nid']}' WHERE nid = {$feature['nid']} AND vid = {$feature['vid']}");
+  // Update all teaser nodes to use the path field.
+  $sql = db_query("SELECT vid, nid, reference_nid FROM {features_node}");
+  while($teaser = db_fetch_array($sql)) {
+    $ret[] = update_sql("UPDATE {features_node} SET reference_type = 'nid', reference_path = 'node/{$teaser['reference_nid']}' WHERE nid = {$teaser['nid']} AND vid = {$teaser['vid']}");
   }
 
   return $ret;

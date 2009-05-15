@@ -21,7 +21,7 @@ function custom_teasers_views_data() {
         ),
       ),
     ),
-    'feature_name' => array(
+    'view_name' => array(
       'title' => t('Feature'), // The item it appears as on the UI,
       'help' => t('The selected feature view.'), // The help that appears on the UI,
       'filter' => array(

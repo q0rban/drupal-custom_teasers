@@ -16,7 +16,7 @@ function custom_teasers_fields_form(&$form_state, $feature = array()) {
     return $form;
   }
 
-  $form['feature_name'] = array(
+  $form['view_name'] = array(
     '#type' => 'value',
     '#value' => $feature['name'],
   );
@@ -59,12 +59,12 @@ function _custom_teasers_fields_item_field($item) {
   $path = drupal_get_path('module', 'custom_teasers') . '/images/';
   $links[] = array(
     'title' => theme('image', $path . 'text-editor.png', t('Edit')),
-    'href' => 'admin/build/custom_teasers/fields/' . $item['feature_name'] .'/options/'. $item['field_name'],
+    'href' => 'admin/build/custom_teasers/fields/' . $item['view_name'] .'/options/'. $item['field_name'],
     'html' => TRUE,
   );
   $links[] = array(
     'title' => theme('image', $path . 'edit-delete.png', t('Delete')),
-    'href' => 'admin/build/custom_teasers/fields/' . $item['feature_name'] .'/delete/'. $item['field_name'],
+    'href' => 'admin/build/custom_teasers/fields/' . $item['view_name'] .'/delete/'. $item['field_name'],
     'html' => TRUE,
   );
 
@@ -113,12 +113,12 @@ function theme_custom_teasers_fields_form($form) {
 
   // If there were no records found, note the fact so users don't get confused
   // by a completely empty table.
-  if (isset($form['feature_name']['#value'])) {
+  if (isset($form['view_name']['#value'])) {
     if (count($rows) == 0) {
-      $output = t('No fields have been added.  Add some fields by navigating <a href="@url">here</a>.', array('@url' => url('admin/build/custom_teasers/edit/'. $form['feature_name']['#value'] .'/fields/add')));
+      $output = t('No fields have been added.  Add some fields by navigating <a href="@url">here</a>.', array('@url' => url('admin/build/custom_teasers/edit/'. $form['view_name']['#value'] .'/fields/add')));
     }
     else {
-      $output = t('You can add more fields by navigating <a href="@url">here</a>.', array('@url' => url('admin/build/custom_teasers/edit/'. $form['feature_name']['#value'] .'/fields/add')));
+      $output = t('You can add more fields by navigating <a href="@url">here</a>.', array('@url' => url('admin/build/custom_teasers/edit/'. $form['view_name']['#value'] .'/fields/add')));
 
       // Render a list of header titles, and our array of rows, into a table. Even
       // we've already rendered all of our records, we always call drupal_render()
@@ -155,7 +155,7 @@ function custom_teasers_fields_form_submit($form, &$form_state) {
 
   foreach($values['fields'] as $field_name => $field) {
     $weight = $field['weight'];
-    db_query("UPDATE {custom_teasers_field} SET weight = %d WHERE field_name = '%s' AND feature_name = '%s'",  $weight, $field_name, $values['feature_name']);
+    db_query("UPDATE {custom_teasers_field} SET weight = %d WHERE field_name = '%s' AND view_name = '%s'",  $weight, $field_name, $values['view_name']);
   }
 
 
@@ -198,7 +198,7 @@ function custom_teasers_fields_add_form(&$form_state, $feature = array()) {
     );
   }
 
-  $form['feature_name'] = array(
+  $form['view_name'] = array(
     '#type' => 'value',
     '#value' => $feature['name'],
   );
@@ -219,7 +219,7 @@ function custom_teasers_fields_add_form_submit($form, &$form_state) {
   if (is_array($fields)) {
     foreach($fields as $field) {
       if ($field['checked']) {
-        if (!custom_teasers_field_insert($field, $values['feature_name'])) {
+        if (!custom_teasers_field_insert($field, $values['view_name'])) {
           $flush = TRUE;
           drupal_set_message(t('There was a problem adding the field %name.', array('%name' => $field_name)));
         }
@@ -234,7 +234,7 @@ function custom_teasers_fields_add_form_submit($form, &$form_state) {
     custom_teasers_invalidate_cache();
   }
 
-  $form_state['redirect'] = 'admin/build/custom_teasers/edit/'. $values['feature_name'] .'/fields';
+  $form_state['redirect'] = 'admin/build/custom_teasers/edit/'. $values['view_name'] .'/fields';
 }
 
 
@@ -249,7 +249,7 @@ function custom_teasers_fields_add_form_submit($form, &$form_state) {
  * @see confirm_form()
  */
 function custom_teasers_field_delete_confirm(&$form_state, $feature, $field_name) {
-  $form['feature_name'] = array(
+  $form['view_name'] = array(
     '#type' => 'value',
     '#value' => $feature['name'],
   );
@@ -283,11 +283,11 @@ function custom_teasers_field_delete_confirm_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   if ($values['confirm']) {
-    custom_teasers_field_delete($values['field_name'], $values['feature_name']);
+    custom_teasers_field_delete($values['field_name'], $values['view_name']);
     drupal_set_message(t('Your item was deleted.'));
   }
 
-  $form_state['redirect'] = 'admin/build/custom_teasers/edit/'. $values['feature_name'] .'/fields';
+  $form_state['redirect'] = 'admin/build/custom_teasers/edit/'. $values['view_name'] .'/fields';
 }
 
 
@@ -300,7 +300,7 @@ function custom_teasers_field_options_form(&$form_state, $feature, $field_name) 
 
   $form = array();
 
-  $form['feature_name'] = array(
+  $form['view_name'] = array(
     '#type' => 'value',
     '#value' => $feature['name'],
   );
@@ -351,10 +351,10 @@ function custom_teasers_field_options_form(&$form_state, $feature, $field_name) 
 function custom_teasers_field_options_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
-  if (db_query("UPDATE {custom_teasers_field} SET options = '%s' WHERE field_name = '%s' AND feature_name = '%s'", serialize($values['options']), $values['field_name'], $values['feature_name'])) {
+  if (db_query("UPDATE {custom_teasers_field} SET options = '%s' WHERE field_name = '%s' AND view_name = '%s'", serialize($values['options']), $values['field_name'], $values['view_name'])) {
     drupal_set_message(t('Your field options have been saved'));
     custom_teasers_invalidate_cache();
-    $form_state['redirect'] = 'admin/build/custom_teasers/edit/'. $values['feature_name'] .'/fields';
+    $form_state['redirect'] = 'admin/build/custom_teasers/edit/'. $values['view_name'] .'/fields';
   }
   else {
     drupal_set_message(t('There was an error saving your field options.'));
@@ -364,17 +364,17 @@ function custom_teasers_field_options_form_submit($form, &$form_state) {
 /**
  * Insert new field
  */
-function custom_teasers_field_insert($field, $feature_name) {
-  $sql = "INSERT INTO {custom_teasers_field} (field_name, feature_name, title) VALUES ('%s', '%s', '%s')";
-  return db_query($sql, $field['field_name'], $feature_name, $field['title']);
+function custom_teasers_field_insert($field, $view_name) {
+  $sql = "INSERT INTO {custom_teasers_field} (field_name, view_name, title) VALUES ('%s', '%s', '%s')";
+  return db_query($sql, $field['field_name'], $view_name, $field['title']);
 }
 
 /**
  * Delete field
  */
-function custom_teasers_field_delete($field_name, $feature_name) {
-  $sql = "DELETE FROM {custom_teasers_field} WHERE field_name = '%s' AND feature_name = '%s'";
-  db_query($sql, $field_name, $feature_name);
+function custom_teasers_field_delete($field_name, $view_name) {
+  $sql = "DELETE FROM {custom_teasers_field} WHERE field_name = '%s' AND view_name = '%s'";
+  db_query($sql, $field_name, $view_name);
 
   custom_teasers_invalidate_cache();
 }

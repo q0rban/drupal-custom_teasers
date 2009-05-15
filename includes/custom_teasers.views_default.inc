@@ -20,17 +20,19 @@ function custom_teasers_views_default_views() {
     }
   }
 
+  _custom_teasers_nodereferences_view($views);
+
   return $views;
 }
 
 /**
  * Implementation of hook_views_default_views().
  */
-function _custom_teasers_views_default_views() {
+function _custom_teasers_nodereferences_view(&$views) {
   $view = new view;
-  $view->name = 'primary';
-  $view->description = 'Generated automatically by the custom_teasers module.';
-  $view->tag = '';
+  $view->name = 'custom_teasers_nodereferences';
+  $view->description = 'Displays a list of available nodes to reference to for Custom Teasers.';
+  $view->tag = 'custom_teasers';
   $view->view_php = '';
   $view->base_table = 'node';
   $view->is_cacheable = FALSE;
@@ -38,37 +40,7 @@ function _custom_teasers_views_default_views() {
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->override_option('fields', array(
-    'nid' => array(
-      'id' => 'nid',
-      'table' => 'feature',
-      'field' => 'nid',
-      'exclude' => 1,
-    ),
     'title' => array(
-      'label' => '',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 1,
-        'path' => '[path]',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
-        'trim' => 1,
-        'max_length' => '20',
-        'word_boundary' => 0,
-        'ellipsis' => 1,
-        'html' => 0,
-      ),
-      'link_to_node' => 0,
-      'exclude' => 0,
-      'id' => 'title',
-      'table' => 'node',
-      'field' => 'title',
-      'relationship' => 'none',
-    ),
-    'body' => array(
       'label' => '',
       'alter' => array(
         'alter_text' => 0,
@@ -79,59 +51,22 @@ function _custom_teasers_views_default_views() {
         'prefix' => '',
         'suffix' => '',
         'help' => '',
-        'trim' => 1,
-        'max_length' => '300',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'html' => 1,
-      ),
-      'exclude' => 0,
-      'id' => 'body',
-      'table' => 'node_revisions',
-      'field' => 'body',
-      'relationship' => 'none',
-    ),
-    'field_feature_image_fid' => array(
-      'label' => '',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 1,
-        'path' => '[path]',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'help' => '',
         'trim' => 0,
         'max_length' => '',
         'word_boundary' => 1,
         'ellipsis' => 1,
+        'strip_tags' => 0,
         'html' => 0,
       ),
       'link_to_node' => 0,
-      'label_type' => 'none',
-      'format' => 'feature_primary_default',
-      'multiple' => array(
-        'group' => TRUE,
-        'multiple_number' => '',
-        'multiple_from' => '',
-        'multiple_reversed' => FALSE,
-      ),
       'exclude' => 0,
-      'id' => 'field_feature_image_fid',
-      'table' => 'node_data_field_feature_image',
-      'field' => 'field_feature_image_fid',
+      'id' => 'title',
+      'table' => 'node',
+      'field' => 'title',
       'relationship' => 'none',
     ),
   ));
   $handler->override_option('sorts', array(
-    'weight' => array(
-      'order' => 'ASC',
-      'id' => 'weight',
-      'table' => 'feature',
-      'field' => 'weight',
-      'relationship' => 'none',
-    ),
     'created' => array(
       'order' => 'DESC',
       'granularity' => 'second',
@@ -158,9 +93,7 @@ function _custom_teasers_views_default_views() {
     ),
     'type' => array(
       'operator' => 'in',
-      'value' => array(
-        'feature' => 'feature',
-      ),
+      'value' => variable_get('custom_teasers_nodereference_types', array('page')),
       'group' => '0',
       'exposed' => FALSE,
       'expose' => array(
@@ -172,34 +105,12 @@ function _custom_teasers_views_default_views() {
       'field' => 'type',
       'relationship' => 'none',
     ),
-    'feature_name' => array(
-      'operator' => 'in',
-      'value' => array(
-        'primary' => 'primary',
-      ),
-      'group' => '0',
-      'exposed' => FALSE,
-      'expose' => array(
-        'operator' => FALSE,
-        'label' => '',
-      ),
-      'id' => 'feature_name',
-      'table' => 'feature',
-      'field' => 'feature_name',
-      'relationship' => 'none',
-    ),
   ));
   $handler->override_option('access', array(
     'type' => 'none',
   ));
-  $handler = $view->new_display('block', 'Block', 'block');
-  $handler->override_option('items_per_page', 5);
-  $handler->override_option('style_plugin', 'views_rotator');
-  $handler->override_option('block_description', 'Homepage Primary feature');
-  $handler->override_option('block_caching', -1);
+  $handler->override_option('items_per_page', variable_get('custom_teasers_nodereference_limit', 0));
   $views[$view->name] = $view;
 
   return $views;
 }
-
-// */
