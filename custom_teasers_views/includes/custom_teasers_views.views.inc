@@ -8,10 +8,10 @@
 /**
  * Implementation of hook_views_data()
  */
-function custom_teasers_views_data() {
+function custom_teasers_views_views_data() {
 
-  // We're registering the 'custom_teasers_node' table.
-  $data['custom_teasers_node'] = array(
+  // We're registering the 'custom_teasers_views_node' table.
+  $data['custom_teasers_views_node'] = array(
     'table' => array(
       'group' => t('Feature'),
       'join' => array(
@@ -25,7 +25,7 @@ function custom_teasers_views_data() {
       'title' => t('Feature'), // The item it appears as on the UI,
       'help' => t('The selected feature view.'), // The help that appears on the UI,
       'filter' => array(
-         'handler' => 'custom_teasers_handler_filter_name',
+         'handler' => 'custom_teasers_views_handler_filter_name',
       ),
     ),
     'path' => array(
@@ -40,7 +40,7 @@ function custom_teasers_views_data() {
       'title' => t('Read more link'),
       'help' => t('A simple read more link.'),
       'field' => array(
-        'handler' => 'custom_teasers_handler_field_node_link',
+        'handler' => 'custom_teasers_views_handler_field_node_link',
       ),
     ),
     'weight' => array(
@@ -59,17 +59,17 @@ function custom_teasers_views_data() {
  * Implementation of hook_views_handlers() to register all of the basic handlers
  * views uses.
  */
-function custom_teasers_views_handlers() {
+function custom_teasers_views_views_handlers() {
   return array(
     'info' => array(
       'path' => drupal_get_path('module', 'custom_teasers') .'/includes',
     ),
     'handlers' => array(
       // filters
-      'custom_teasers_handler_filter_name' => array(
+      'custom_teasers_views_handler_filter_name' => array(
         'parent' => 'views_handler_filter_in_operator',
       ),
-      'custom_teasers_handler_field_node_link' => array(
+      'custom_teasers_views_handler_field_node_link' => array(
         'parent' => 'views_handler_field',
       ),
     ),

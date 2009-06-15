@@ -3,7 +3,7 @@
 /**
  * Field handler to present a link to the referenced node.
  */
-class custom_teasers_handler_field_node_link extends views_handler_field {
+class custom_teasers_views_handler_field_node_link extends views_handler_field {
   function construct() {
     parent::construct();
     $this->additional_fields['reference_path'] = 'reference_path';

@@ -38,7 +38,7 @@ function custom_teasers_schema() {
         'length' => 32,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("The {custom_teasers_view} name for this node."),
+        'description' => t("The {custom_teasers_views} name for this node."),
       ),
       'reference_type' => array(
         'type' => 'varchar',
@@ -66,108 +66,10 @@ function custom_teasers_schema() {
         'not null' => TRUE,
         'default' => 0,
         'size' => 'tiny',
-        'description' => t('The weight of this {custom_teasers_node}.'),
+        'description' => t('The weight of this {custom_teasers}.'),
       ),
     ),
     'primary key' => array('vid', 'nid'),
-  );
-  $schema['custom_teasers_view'] = array(
-    'description' => t('Stores teaser view settings.'),
-    'fields' => array(
-      'name' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'description' => t('Unique identifier for the {custom_teasers_view} item.'),
-      ),
-      'module' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => 'custom_teasers',
-        'description' => t("The name of the module that generated the {custom_teasers_view} item.")
-      ),
-      'title' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => t("The human-readable description of the {custom_teasers_view} item.")
-      ),
-      'path' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '<front>',
-        'description' => t("The path that the {custom_teasers_view} will display on.")
-      ),
-      'style_plugin' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => t("The style_plugin of the listing {custom_teasers_view} item."),
-      ),
-      'style_options' => array(
-        'type' => 'text',
-        'size' => 'medium',
-        'not null' => TRUE,
-        'serialize' => TRUE,
-        'description' => t("An array of settings for the plugin."),
-      ),
-      'sort' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => 'DESC',
-        'description' => t("The sort style of the listing {custom_teasers_view} item."),
-      ),
-      'items_per_page' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 5,
-        'description' => t('The number of items to load in the view.'),
-      ),
-    ),
-    'primary key' => array('name'),
-  );
-  $schema['custom_teasers_field'] = array(
-    'description' => t('Stores fields associated with {custom_teasers_view}.'),
-    'fields' => array(
-      'field_name' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'description' => t('Field name.'),
-      ),
-      'view_name' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'description' => t('Unique identifier for the {custom_teasers_view} item.'),
-      ),
-      'title' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'description' => t('Field name.'),
-      ),
-      'weight' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'size' => 'tiny',
-        'description' => t('The weight of this {custom_teasers_node}.'),
-      ),
-      'options' => array(
-        'type' => 'text',
-        'size' => 'medium',
-        'not null' => TRUE,
-        'serialize' => TRUE,
-        'description' => t("An array of alteration settings for the field."),
-      ),
-    ),
-    'primary key' => array('field_name', 'view_name'),
   );
   return $schema;
 }
@@ -178,7 +80,7 @@ function custom_teasers_schema() {
 function custom_teasers_enable() {
   module_load_include('inc', 'filefield', 'filefield_widget');
   module_load_include('inc', 'imagefield', 'imagefield_widget');
-  if (function_exists('imagefield_widget_settings_save')) {
+  if (function_exists('imagefield_widget_settings_save') && function_exists('content_instance_tablename')) {
     _custom_teasers_install_imagefield();
   }
 }
@@ -221,24 +123,4 @@ function _custom_teasers_install_imagefield() {
  */
 function custom_teasers_uninstall() {
   drupal_uninstall_schema('custom_teasers');
-}
-
-/**
- * Implementation of hook_update_N().
- *
- * This update adds a new reference_path field which allows for more custom featuring.
- */
-function custom_teasers_update_6100() {
-  $ret = array();
-
-  // Add our reference_path field
-  db_add_field($ret, 'features_node', 'reference_path', array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''));
-
-  // Update all teaser nodes to use the path field.
-  $sql = db_query("SELECT vid, nid, reference_nid FROM {features_node}");
-  while($teaser = db_fetch_array($sql)) {
-    $ret[] = update_sql("UPDATE {features_node} SET reference_type = 'nid', reference_path = 'node/{$teaser['reference_nid']}' WHERE nid = {$teaser['nid']} AND vid = {$teaser['vid']}");
-  }
-
-  return $ret;
 }

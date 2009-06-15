@@ -3,170 +3,8 @@
 
 /**
  * @file
- * SimpleViews administration module.
- *
- * SimpleViews provides a lightweight API and streamlined UI for building views
- * of node content. Rather than exposing the full power of Views, it lets admins
- * make a small number of choices that cover the commonly-used 80% of Views'
- * functionality.
- *
- * All views created with SimpleViews can be re-editing using the full Views UI
- * module, making it an excellent starting point for those just learning Views.
+ * Defines a custome teaser content type for use with the custom_teasers module.
  */
-
-define('FEATURES_REF_TYPE_RELATIVE', 'rel');
-define('FEATURES_REF_TYPE_NODE', 'nid');
-
-module_load_include('inc', 'custom_teasers', '/includes/custom_teaser_node');
-
-/**
- * Implementation of hook_menu().
- */
-function custom_teasers_menu() {
-  $items = array();
-
-  $items['admin/settings/custom_teasers'] = array(
-    'title' => t('Features'),
-    'description' => t('Configure the Feature content type.'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_settings'),
-    'access arguments' => array('administer custom teasers'),
-    'file' => 'custom_teasers.admin.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-
-  $items['admin/content/node/custom_teasers'] = array(
-    'title' => 'Features',
-    'description' => 'Manage features.',
-    'page callback' => 'custom_teasers_node_sort_overview',
-    'access arguments' => array('edit any feature content'),
-    'file' => 'custom_teasers.pages.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $i = 0;
-  foreach(custom_teasers_item_load_all() as $feature) {
-    if ($feature['sort'] != 'random') {
-      $items['admin/content/node/custom_teasers/'. $feature['name']] = array(
-        'title' => $feature['title'],
-        'description' => 'Manage features.',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('custom_teasers_node_sort_form', $feature['name'], $feature['sort']),
-        'access arguments' => array('edit any feature content'),
-        'file' => 'custom_teasers.pages.inc',
-        'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-        'weight' => ++$i,
-        'type' => MENU_LOCAL_TASK,
-      );
-    }
-  }
-
-  $items['admin/build/custom_teasers'] = array(
-    'title' => 'Features',
-    'description' => 'Manage features.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_overview_form'),
-    'access arguments' => array('build custom teaser views'),
-    'file' => 'custom_teasers.pages.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-
-  $items['admin/build/custom_teasers/list'] = array(
-    'title' => 'List',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -10,
-  );
-
-  // Add
-  $items['admin/build/custom_teasers/add'] = array(
-    'title' => 'Add feature',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_form'),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'custom_teasers.pages.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-
-  // Edit
-  $items['admin/build/custom_teasers/edit/%custom_teasers_item'] = array(
-    'title' => 'Edit',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_form', 4),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'custom_teasers.pages.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-  $items['admin/build/custom_teasers/edit/%custom_teasers_item/settings'] = array(
-    'title' => 'Settings',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -10,
-  );
-
-  // Delete
-  $items['admin/build/custom_teasers/delete/%custom_teasers_item'] = array(
-    'title' => 'Delete feature',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_delete_confirm', 4),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_CALLBACK,
-    'file' => 'custom_teasers.pages.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-
-  // Fields
-  $items['admin/build/custom_teasers/edit/%custom_teasers_item/fields'] = array(
-    'title' => 'Fields',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_fields_form', 4),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'custom_teasers.field.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-  $items['admin/build/custom_teasers/edit/%custom_teasers_item/fields/add'] = array(
-    'title' => 'Add Fields',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_fields_add_form', 4),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_CALLBACK,
-    'file' => 'custom_teasers.field.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-  $items['admin/build/custom_teasers/fields/%custom_teasers_item/options/%'] = array(
-    'title' => 'Field Options',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_field_options_form', 4, 6),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_CALLBACK,
-    'file' => 'custom_teasers.field.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-  $items['admin/build/custom_teasers/fields/%custom_teasers_item/delete/%'] = array(
-    'title' => 'Alter Fields',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_field_delete_confirm', 4, 6),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_CALLBACK,
-    'file' => 'custom_teasers.field.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-
-  // Style options
-  $items['admin/build/custom_teasers/edit/%custom_teasers_item/style_options'] = array(
-    'title' => 'Style Options',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('custom_teasers_style_options_form', 4),
-    'access arguments' => array('build custom teaser views'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'custom_teasers.pages.inc',
-    'file path' => drupal_get_path('module', 'custom_teasers') .'/includes',
-  );
-
-  return $items;
-}
 
 /**
  * Implementation of hook_perm().
@@ -177,41 +15,52 @@ function custom_teasers_menu() {
  */
 function custom_teasers_perm() {
   return array(
-    'create feature content',
-    'delete own feature content',
-    'delete any feature content',
-    'edit own feature content',
-    'edit any feature content',
-    'build custom teaser views',
-    'administer custom teasers',
+    'create custom teasers',
+    'delete own custom teasers',
+    'delete any custom teasers',
+    'edit own custom teasers',
+    'edit any custom teasers',
   );
 }
+
+/**
+ * Implementation of hook_access().
+ *
+ * Node modules may implement node_access() to determine the operations
+ * users may perform on nodes. This example uses a very common access pattern.
+ */
+function custom_teasers_access($op, $node, $account) {
+  if ($op == 'create') {
+    return user_access('create custom teasers', $account);
+  }
+
+  if ($op == 'update') {
+    if (user_access('edit any custom teasers', $account) || (user_access('edit own custom teasers', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+
+  if ($op == 'delete') {
+    if (user_access('delete any custom teasers', $account) || (user_access('delete own custom teasers', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+}
+
 
 /**
  * Implementation of hook_theme().
  *
  * Returns information about every themable function defined by the module.
  */
-function custom_teasers_theme() {
+function custom_teasers_views_theme() {
   $items = array();
-  $path = drupal_get_path('module', 'custom_teasers') .'/includes';
 
-  $items['custom_teasers_node_sort_form'] = array(
+  $items['custom_teasers_sort_form'] = array(
     'arguments' => array('form' => array()),
     'file' => 'custom_teasers.pages.inc',
-    'path' => $path,
   );
-  $items['custom_teasers_overview_form'] = array(
-    'arguments' => array('form' => array()),
-    'file' => 'custom_teasers.pages.inc',
-    'path' => $path,
-  );
-  $items['custom_teasers_fields_form'] = array(
-    'arguments' => array('form' => array()),
-    'file' => 'custom_teasers.pages.inc',
-    'path' => $path,
-  );
-  $items['custom_teasers_view_nodes_table'] = array(
+  $items['custom_teasers_table'] = array(
     'arguments' => array('nodes' => array()),
   );
   $items['custom_teasers_read_more_link'] = array(
@@ -221,102 +70,6 @@ function custom_teasers_theme() {
   return $items;
 }
 
-/**
- * Implementation of hook_form_alter().
- *
- * Adds the 'make a listing page' checkbox on each content type's settings form.
- */
-function custom_teasers_form_alter(&$form, &$form_state, $form_id) {
-  if ($form['#id'] == 'node-form'
-        && user_access('create feature content')
-        && in_array($form['#node']->type, variable_get('custom_teasers_nodereference_types', array('page')))) {
-  
-    // Add our feature checkbox.
-    $form['buttons']['custom_teaser'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Add Feature'),
-      '#description' => t('Would you like to add a custom teaser for this content?'),
-      '#default_value' => 0,
-    );
-
-    // Let the user know about existing features.
-    if ($num = count($teasers = custom_teasers_nodes_load($form['#node']->nid))) {
-      $form['buttons']['feature']['#description'] .= t('<br /><strong>This content already has %features attached to it.</strong>', array(
-        '%features' => format_plural($num, '1 Feature', '@count Features')));
-    }
-  }
-  if ($form_id == 'system_themes_form') {
-    $form['#validate'][] = 'custom_teasers_themes_form_validate';
-  }
-}
-
-/**
- * Implementation of hook_form_validate().
- *
- * Errors should be signaled with form_set_error().
- */
-function custom_teasers_themes_form_validate(&$form, &$form_state) {
-  $values = $form_state['values'];
-  global $theme;
-
-  if ($theme != $values['theme_default']) {
-    custom_teasers_invalidate_cache();
-  }
-}
-
-/**
- * Flushes all view caches.
- */
-function custom_teasers_invalidate_cache() {
-  views_flush_caches();
-  views_invalidate_cache();
-}
-
-/**
- * Implementation of hook_nodeapi().
- */
-function custom_teasers_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  switch ($op) {
-    case 'insert':
-    case 'update':
-      if ($node->feature) {
-        drupal_goto('node/add/feature/'. $node->nid .'/'. $node->type);
-      }
-      break;
-
-    case 'view':
-      // Flag to see if this is a teaser view.
-      $teaser = $a3;
-
-      // If it's not a teaser, the user can edit the content, the node type is allowed, 
-      // and there are actually feature nodes, THEN add the feature node table to the node content.
-      if (!$teaser && user_access('edit any feature content') && in_array($node->type, variable_get('custom_teasers_nodereference_types', array('page'))) && count($feature_nodes = custom_teasers_nodes_load($node->nid))) {
-        $node->content['feature'] = array(
-          '#value' => theme('custom_teasers_view_nodes_table', $feature_nodes),
-          '#weight' => 99,  // We want it to display at the bottom of the page.
-        );
-      }
-      break;
-
-    case 'delete revision':
-      db_query('DELETE FROM {custom_teasers_node} WHERE vid = %d', $node->vid);
-      break;
-  }
-}
-
-/**
- * Load all teaser nodes by reference nid.
- */
-function custom_teasers_nodes_load($nid) {
-  $feature_nodes = array();
-
-  $query = db_query("SELECT nid FROM {custom_teasers_node} WHERE reference_nid = %d", $nid);
-  while ($nid = db_result($query)) {
-    $feature_nodes[] = node_load($nid);
-  }
-
-  return $feature_nodes;
-}
 
 /**
  *
@@ -324,10 +77,10 @@ function custom_teasers_nodes_load($nid) {
  *
  * @ingroup themeable
  */
-function theme_custom_teasers_view_nodes_table($nodes) {
+function theme_custom_teasers_table($nodes) {
   $rows = array();
   $path = drupal_get_path('module', 'custom_teasers') . '/images/';
-  $features = custom_teasers_item_load_all_list();
+  $features = custom_teasers_views_item_load_all_list();
 
   foreach ($nodes as $node) {
     $row = array();  
@@ -377,336 +130,338 @@ function theme_custom_teasers_read_more_link($text, $path) {
   return '<span class="read-more-link">'. l($text, $path) .'</span>';
 }
 
-
 /**
- * Loader function for individual records.
- *
- * Because we use '%custom_teasers_item' as a wildcard in our hook_menu()
- * handler, this function will also be called automatically when we go to edit
- * or delete a record. Thanks, Menu API!.
- *
- * @param $name
- *   An int containing the ID of an item.
- * @return
- *   A single record in array format, or FALSE if none matched the incoming ID.
+ * Implementation of hook_nodeapi().
  */
-function custom_teasers_item_load($name) {
-  $features = custom_teasers_item_load_all();
-
-  return isset($features[$name]) ? $features[$name] : FALSE;
-}
-
-/**
- * Public loader function for the full collection of records.
- *
- * In situations where the module's data rarely changes, or is being used
- * frequently (for example, loaded and processed on every page load), this
- * is a prime candidate for caching. See The Beginner's Guide to Caching at
- * http://www.lullabot.com/articles/a_beginners_guide_to_caching_data for more
- * details.
- *
- * This function assumes that results should be sorted by 'weight' -- if your
- * module doesn't store a weight column on its records, or if you need to sort
- * on some other property, this function's SQL should be updated as well.
- *
- * @return
- *   An array of all records, keyed by id.
- */
-function custom_teasers_item_load_all() {
-  init_theme();
-  global $theme_info;
-  static $records = array();
-
-  if (empty($records)) {
-    // Load module features
-    $records = custom_teasers_get_module_features();
-
-    $sql = 'SELECT * FROM {custom_teasers_view}';
-    $result = db_query($sql);
-
-    while ($record = db_fetch_array($result)) {
-      $record['style_options'] = unserialize($record['style_options']);
-
-      // Use + to prefer the database record over the module's version.
-      $records[$record['name']] = is_array($records[$record['name']]) ? $record + $records[$record['name']] : $record;
-
-      // Unset the default flag in case this was loaded from the features hook.
-      unset($records[$record['name']]['default']);      
-    }
-
-    // Load in the fields and theme settings 
-    foreach ($records as $record) {
-      $fields = custom_teasers_fields_load($record['name']);
-      $theme_settings = $theme_info->info['feature-settings'][$record['name']];
-
-      if (!empty($fields)) {
-        // Load in the fields.
-        $records[$record['name']]['fields'] = $fields;
+function custom_teasers_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'insert':
+    case 'update':
+      if ($node->feature) {
+        drupal_goto('node/add/teaser/'. $node->nid);
       }
+      break;
 
-      if (!empty($theme_settings)) {
-        // Load in the theme settings.
-        $records[$record['name']] = custom_teasers_union($records[$record['name']], $theme_settings);
+    case 'view':
+      // Flag to see if this is a teaser view.
+      $teaser = $a3;
+
+      // If it's not a teaser, the user can edit the content, the node type is allowed, 
+      // and there are actually feature nodes, THEN add the feature node table to the node content.
+      if (!$teaser && user_access('edit any custom teasers') && in_array($node->type, variable_get('custom_teasers_views_nodereference_types', array('page'))) && count($teaser_nodes = custom_teasers_nodes_load($node->nid))) {
+        $node->content['teaser'] = array(
+          '#value' => theme('custom_teasers_nodes_table', $feature_nodes),
+          '#weight' => 99,  // We want it to display at the bottom of the page.
+        );
       }
-    }
-  }
+      break;
 
-  return $records;
-}
-
-/**
- * Helper function to union two feature arrays
- */
-function custom_teasers_union($feature, $theme_settings) {
-  if (is_array($theme_settings['fields'])) {
-    foreach ($theme_settings['fields'] as $field_name => $field) {
-      $feature_field = $feature['fields'][$field_name];
-      if (isset($feature['fields'][$field_name])) {
-        if ($field) {
-          $feature['fields'][$field_name] = _custom_teasers_union_recursive($feature_field, $field);
-        }
-        else {
-          unset($feature['fields'][$field_name]);
-        }
+    case 'delete':
+      if (in_array($node->type, variable_get('custom_teasers_views_nodereference_types', array('page')))) {
+        // @todo: add a while clause to select all custom teasers that link to this node and delete them completely. 
       }
-    }
-  }
-  unset($theme_settings['fields']);
-  if (is_array($theme_settings)) {
-    $feature = _custom_teasers_union_recursive($feature, $theme_settings);
-  }
+      break;
 
-  return $feature;
+    case 'delete revision':
+      db_query('DELETE FROM {custom_teasers} WHERE vid = %d', $node->vid);
+      break;
+  }
 }
 
 /**
- * Helper function to union two arrays recursively
+ * Implementation of hook_node_info().
  */
-function _custom_teasers_union_recursive($array1, $array2) {
-  foreach ($array2 as $key => $value) {
-    if (is_array($value)) {
-      $array1[$key] = _custom_teasers_union_recursive($array1[$key], $array2[$key]);
-    }
-    else {
-      $array1[$key] = $value;
-    }
-  }
-  return $array1;
-}  
-
-/**
- *
- */
-function custom_teasers_get_module_features() {
-  static $features = NULL;
-
-  if (!isset($features)) {
-    $features = array();
-
-    // Load in the features
-    foreach (module_implements('custom_teasers_default_features') as $module) {
-      $function = $module . '_custom_teasers_default_features';
-      $return = $function();
-      if (is_array($return)) {
-        foreach($return as $feature) {
-          if (isset($features[$feature['name']])) {
-            // drupal_set_message();
-          }
-          else if (isset($feature['name'])) {
-            $feature['default'] = TRUE;
-            $features[$feature['name']] = $feature;
-          }
-        }
-      }
-    }
-  }
-
-  return $features;
-}
-
-
-/**
- * Loads all records in a simple name => title format for ease of use in forms.
- *
- * @return
- *  An array of feature titles, keyed by id.
- */
-function custom_teasers_item_load_all_list() {
-  $features = custom_teasers_item_load_all();
-
-  foreach ($features as $feature) {
-    $features[$feature['name']] = $feature['title'];
-  }
-
-  return $features;
+function custom_teasers_node_info() {
+  return array(
+    'teaser' => array(
+      'name' => t('Custom Teaser'),
+      'module' => 'custom_teasers',
+      'description' => t("Creates a Custom Teaser that links to existing content."),
+      'has_title' => TRUE,
+      'title_label' => t('Teaser Title'),
+      'has_body' => TRUE,
+      'body_label' => t('Teaser Body'),
+    )
+  );
 }
 
 /**
- * Inserts a new item, or updates an existing one.
+ * Implementation of hook_form().
  *
- * Automatically inserts or updates, based on whether the item's unique ID has
- * been set yet. Because drupal_write_record() updates the item itself (adding
- * the unique ID after the database has been updated), we return the item
- * after saving it.
- *
- * This allows any calling function to check the id of the returned item and
- * act on the ID as needed (redirecting to a 'view' page after inserting, etc).
- *
- * @param $item
- *   A item to be saved. If $item['name'] is set, the item will be updated.
- *   Otherwise, a new item will be inserted into the database.
- * @return
- *   The saved item, with its ID set.
+ * Now it's time to describe the form for collecting the information
+ * specific to this node type. This hook requires us to return an array with
+ * a sub array containing information for each element in the form.
  */
-function custom_teasers_item_save($item, $op = 'update') {
-  if ($op == 'update') {
-    drupal_write_record('custom_teasers_view', $item, 'name');
+function custom_teasers_form(&$node) {
+
+  // Now we load the title and body information for this node type.
+  $type = node_get_types('type', $node);
+
+  if ($type->has_title) {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => check_plain($type->title_label),
+      '#required' => TRUE,
+      '#default_value' => $node->title,
+      '#weight' => -5
+    );
+  }
+
+  if ($type->has_body) {
+    $form['body_field'] = node_body_field($node, $type->body_label, $type->min_word_count);
+  }
+
+  // Now we list the possible nodes to reference (IOW, link to).
+  $references = _custom_teasers_potential_references();
+  if (isset($node->reference_nid) && !isset($references['titles'][$node->reference_nid])) {
+    $reference = node_load($node->reference_nid);
+    $references[$node->reference_nid] = $reference->title;
+  }
+
+  $form['teaser_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Teaser options'),
+  );
+
+  if (module_exists('custom_teaser_views')) {
+    $options = custom_teasers_views_load_all_list();
+
+    // Add js to control the jquery.
+    _custom_teasers_node_form_js();
+
+    // We want to display the feature name selector first.
+    $form['teaser_options']['view_name'] = array(
+      '#title' => t('Teaser location'),
+      '#type' => 'radios',
+      '#default_value' => $node->view_name,
+      '#options' => $options,
+      '#required' => TRUE,
+      '#weight' => -6,
+      '#prefix' => '<div id="feature-name-wrap">',
+      '#suffix' => '</div>',
+    );
+  }
+
+  $form['teaser_options']['reference_type'] = array(
+    '#type' => 'radios',
+    '#default_value' => isset($node->reference_type) ? $node->reference_type : 'nid',
+    '#required' => TRUE,
+    '#title' => t('Destination'),
+    '#options' => array(
+      'nid' => t('Content'),
+      'rel' => t('Path'),
+    ),
+    '#prefix' => theme('advanced_help_topic', 'custom_teasers', 'reference-type'),
+  );
+
+  $form['teaser_options']['reference_path'] = array(
+    '#type' => 'textfield',
+    '#default_value' => $node->reference_path,
+    '#title' => t('Path/URL'),
+    '#description' => t('Specify your path here.  Do not include a leading slash (ex. about-us instead of /about-us).'),
+  );
+
+  $form['teaser_options']['reference_nid'] = array(
+    '#type' => 'select',
+    '#title' => t('Content to link to'),
+    '#default_value' => isset($node->reference_nid) ? $node->reference_nid : 0,
+    '#options' => (array) $references,
+  );
+  if (empty($references)) {
+    $form['teaser_options']['reference_nid']['#disabled'] = TRUE;
+    $form['teaser_options']['reference_nid']['#description'] = t('You do not have any content.  Please create some content first to use the Existing content destination.');
+  }
+
+  // Check to see if we've added this from another node.
+  if (is_numeric($nid = arg(3))) {
+    $form['teaser_options']['reference_nid']['#type'] = $form['teaser_options']['reference_type']['#type'] = 'value';
+    unset($form['teaser_options']['reference_path']);
+    $form['teaser_options']['reference_nid']['#value'] = $nid;
+    $form['teaser_options']['reference_type']['#value'] = 'nid';
+  }
+
+  return $form;
+}
+
+/**
+ * Implementation of hook_validate().
+ *
+ * Errors should be signaled with form_set_error().
+ */
+function custom_teasers_validate(&$node) {
+  if ($node->reference_type == 'nid' && empty($node->reference_nid)) {
+    form_set_error('reference_nid', t('You must select the content this teaser links to.'));
+  }
+  if ($node->reference_type == 'rel') {
+    // Strip slashes from the beginning and end of the reference_path
+    $node->reference_path = trim($node->reference_path, '\\/');
+    // Check to make sure it's not empty.
+    if (empty($node->reference_path)) {
+      form_set_error('reference_path', t('You must specify a destination path.'));
+    }
+    // Check to make sure they didn't include a full path.
+    if (strpos($node->reference_path, 'http') === 0) {
+      form_set_error('reference_path', t('Please use a relative path. A "relative path" is a URL WITHOUT the domain name stuff in front of it (ex. about-us).'));
+    }
+  }
+  if (module_exists('custom_teaser_views') && !$node->view_name) {
+    form_set_error('view_name', t('You must select a feature location.'));
+  }
+}
+
+/**
+ * Implementation of hook_insert().
+ */
+function custom_teasers_insert($node) {
+  _custom_teasers_reference_format($node);
+
+  db_query("INSERT INTO {custom_teasers} (vid, nid, view_name, reference_nid, reference_type, reference_path) VALUES (%d, %d, '%s', %d, '%s', '%s')", $node->vid, $node->nid, $node->view_name, $node->reference_nid, $node->reference_type, $node->reference_path);
+}
+
+/**
+ * Implementation of hook_update().
+ */
+function custom_teasers_update($node) {
+  // if this is a new node or we're adding a new revision,
+  if ($node->revision) {
+    feature_insert($node);
   }
   else {
-    // Save the feature.
-    drupal_write_record('custom_teasers_view', $item);
+    _custom_teasers_reference_format($node);
 
-    // Save fields if there are any..
-    if (is_array($item['fields'])) {
-      foreach ($item['fields'] as $field) {
-        if (isset($field['field_name'])) {
-          $field['view_name'] = $item['name'];
-          drupal_write_record('custom_teasers_field', $field);
+    db_query("UPDATE {custom_teasers} SET view_name = '%s', reference_nid = %d, reference_type = '%s', reference_path = '%s' WHERE vid = %d",  $node->view_name, $node->reference_nid, $node->reference_type, $node->reference_path, $node->vid);
+  }
+}
+
+/**
+ * Implementation of hook_delete().
+ *
+ * When a node is deleted, we need to remove all related records from out table.
+ */
+function custom_teasers_delete($node) {
+  // Delete all revisions, by using the node's nid.
+  db_query('DELETE FROM {custom_teasers} WHERE nid = %d', $node->nid);
+}
+
+/**
+ * Implementation of hook_load().
+ *
+ * Now that we've defined how to manage the node data in the database, we
+ * need to tell Drupal how to get the node back out. This hook is called
+ * every time a node is loaded, and allows us to do some loading of our own.
+ */
+function custom_teasers_load($node) {
+  $node = db_fetch_object(db_query('SELECT view_name, reference_nid, reference_type, reference_path FROM {custom_teasers} WHERE vid = %d', $node->vid));
+  return $node;
+}
+
+/**
+ * Implementation of hook_view().
+ *
+ * This is a typical implementation that simply runs the node text through
+ * the output filters.
+ */
+function custom_teasers_view($node, $teaser = FALSE, $page = FALSE) {
+  $node = node_prepare($node, $teaser);
+
+  return $node;
+}
+
+/**
+ * Load all teaser nodes by reference nid.
+ */
+function custom_teasers_nodes_load($nid) {
+  $nodes = array();
+
+  $query = db_query("SELECT nid FROM {custom_teasers} WHERE reference_nid = %d", $nid);
+  while ($nid = db_result($query)) {
+    $nodes[] = node_load($nid);
+  }
+
+  return $nodes;
+}
+
+/**
+ * Update a weight on a teaser.
+ */
+function custom_teasers_update_weight($nid, $weight) {
+  db_query("UPDATE {custom_teasers} SET weight = %d WHERE nid = %d", $weight, $nid);
+}
+
+/**
+ * Helper function to format the node reference based on type.
+ */
+function _custom_teasers_reference_format(&$node) {  
+  switch($node->reference_type) {
+    case 'rel':
+      $node->reference_nid = 0;
+      break;
+
+    case 'nid':
+      $node->reference_path = 'node/'. $node->reference_nid;
+      break;
+  }
+}
+
+/**
+ * Returns referenceable nodes defined by content types.
+ * Adapted from nodereference.module
+ */
+function _custom_teasers_potential_references($limit = 0) {
+  $types = array();
+  $where = array();
+  $args = array();
+  $references = array();
+
+  // If the limit arg is not set, use the variable.
+  $limit = ($limit) ? $limit : variable_get('custom_teasers_nodereference_limit', 0);
+
+  foreach (variable_get('custom_teasers_nodereference_types', array('page')) as $type) {
+    $types[] = "n.type = '%s'";
+    $args[] = $type;
+  }
+
+  $where[] = implode(' OR ', $types);
+
+  // If there's no content types, return an empty array before the query.
+  if (!count($types)) {
+    return array();
+  }
+
+  $where_clause = $where ? 'WHERE ('. implode(') AND (', $where) .')' : '';
+  $sql = db_rewrite_sql("SELECT n.nid, n.title AS node_title, n.type AS node_type, n.created AS node_created FROM {node} n $where_clause ORDER BY n.created DESC, n.title, n.type");
+  $result = $limit ? db_query_range($sql, $args, 0, $limit) : db_query($sql, $args);
+
+  // Load the array
+  while ($node = db_fetch_object($result)) {
+    $references[$node->nid] = $node->node_title;
+  }
+
+  return $references;
+}
+
+
+/**
+ * Add js to the teaser node form.
+ */
+function _custom_teasers_node_form_js() {
+  $teasers = custom_teasers_views_load_all_list();
+  $settings = array();
+
+  foreach ($features as $name => $feature) {
+    $feature += custom_teasers_default_data();
+    if (is_array($feature['fields'])) {
+      foreach($feature['fields'] as $field_name => $field) {
+        $settings[$name][$field_name]['field_name'] = $field_name;
+        if (is_array($field) && $field['options']['alter']['trim']) {
+          $settings[$name][$field_name]['length'] = (int) $field['options']['alter']['max_length'];
         }
       }
     }
   }
 
-  views_invalidate_cache();
-  menu_rebuild();
-  return $item;
-}
-
-/**
- * Deletes an item, given its unique name.
- *
- * @param $name
- *   An int containing the ID of an item.
- */
-function custom_teasers_item_delete($name) {
-  $sql = "DELETE FROM {custom_teasers_view} WHERE name = '%s'";
-  db_query($sql, $name);
-
-  $sql = "DELETE FROM {custom_teasers_field} WHERE view_name = '%s'";
-  db_query($sql, $name);
-  
-  variable_set('menu_needs_rebuild', TRUE);
-  views_invalidate_cache();
-}
-
-/**
- * Loads an array of fields for a specific feature.
- *
- * @param $view_name
- *   The unique id name of the feature.
- */
-function custom_teasers_fields_load($view_name) {
-  $fields = array();
-
-  $result = db_query("SELECT * FROM {custom_teasers_field} WHERE view_name = '%s' ORDER BY weight ASC", $view_name);
-  while ($field = db_fetch_array($result)) {
-    $field['options'] = unserialize($field['options']);
-    $fields[$field['field_name']] = $field;
+  if (!empty($settings)) {
+    drupal_add_js(drupal_get_path('module', 'custom_teasers') .'/custom_teasers.js', 'module');
+    drupal_add_js(array('custom_teasers' => $settings), 'setting');
   }
-
-  return $fields;
-}
-
-/**
- * Deletes all fields relating to a feature
- */
-function custom_teasers_fields_delete($view_name) {
-  db_query("DELETE FROM {custom_teasers_field} WHERE view_name = '%s'", $view_name);
-}
-
-/**
- * Implementation of hook_views_api.
- */
-function custom_teasers_views_api() {
-  return array(
-    'api' => 2,
-    'path' => drupal_get_path('module', 'custom_teasers') . '/includes',
-  );
-}
-
-/**
- * Build a teaser view in views formatting.
- */
-function custom_teasers_build_view($feature = array()) {
-  module_load_include('inc', 'custom_teasers', '/includes/custom_teaser_views');
-  return _custom_teasers_build_view($feature);
-}
-
-function custom_teasers_default_data() {
-  return array(
-    'module' => 'custom_teasers',
-    'path' => '<front>',
-    'style_plugin' => 'default',
-    'sort' => 'DESC',
-    'items_per_page' => 5,
-    'fields' => array (
-      'title' => array(
-        'field_name' => 'title',
-        'title' => 'Feature Title',
-        'weight' => -1,
-        'options' => array(
-          'label' => '',
-          'alter' => array(
-            'alter_text' => 0,
-            'text' => '',
-            'make_link' => 1,
-            'path' => '[path]',
-            'alt' => '',
-            'prefix' => '',
-            'suffix' => '',
-            'help' => '',
-            'trim' => 1,
-            'max_length' => '35',
-            'word_boundary' => 0,
-            'ellipsis' => 1,
-            'html' => 0,
-          ),
-          'link_to_node' => 0,
-          'exclude' => 0,
-          'id' => 'title',
-          'table' => 'node',
-          'field' => 'title',
-          'relationship' => 'none',
-        ),
-      ),
-      'body' => array(
-        'field_name' => 'body',
-        'title' => 'Feature Body',
-        'weight' => 0,
-        'options' => array(
-          'label' => '',
-          'alter' => array(
-            'alter_text' => 0,
-            'text' => '',
-            'make_link' => 0,
-            'path' => '',
-            'alt' => '',
-            'prefix' => '',
-            'suffix' => '',
-            'help' => '',
-            'trim' => 1,
-            'max_length' => '400',
-            'word_boundary' => 1,
-            'ellipsis' => 1,
-            'html' => 1,
-          ),
-          'exclude' => 0,
-          'id' => 'body',
-          'table' => 'node_revisions',
-          'field' => 'body',
-          'relationship' => 'none',
-        ),
-      ),
-    ),
-  );
 }

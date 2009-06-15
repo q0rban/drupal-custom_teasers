@@ -1,0 +1,6 @@
+; $Id$
+name = Custom Teaser Views
+description = Add views functionality to Custom Teasers. RECOMMENDED.
+dependencies[] = views
+dependencies[] = custom_teasers
+core = 6.x
