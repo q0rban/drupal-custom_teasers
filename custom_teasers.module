@@ -7,6 +7,12 @@
  */
 
 /**
+ * Define our reference types.
+ */
+define('CUSTOM_TEASERS_REF_REL', 'rel');
+define('CUSTOM_TEASERS_REF_NID', 'nid');
+
+/**
  * Implementation of hook_perm().
  *
  * Since we are limiting the ability to create new nodes to certain users,
@@ -73,7 +79,7 @@ function custom_teasers_views_theme() {
 
 /**
  *
- * Arranges feature nodes in a table.
+ * Arranges teaser nodes in a table.
  *
  * @ingroup themeable
  */
@@ -108,7 +114,7 @@ function theme_custom_teasers_table($nodes) {
   // If there were no items found, note the fact so users don't get confused
   // by a completely empty table.
   if (count($rows) == 0) {
-    $rows[] = array(array('data' => t('No features.'), 'colspan' => 3));
+    $rows[] = array(array('data' => t('No teasers.'), 'colspan' => 3));
   }
 
   // Render a list of header titles, and our array of rows, into a table. Even
@@ -193,8 +199,10 @@ function custom_teasers_node_info() {
  * a sub array containing information for each element in the form.
  */
 function custom_teasers_form(&$node) {
+  // Add the js.
+  drupal_add_js(drupal_get_path('module', 'custom_teasers') .'/custom_teasers.js', 'module');
 
-  // Now we load the title and body information for this node type.
+  // Load the title and body information for this node type.
   $type = node_get_types('type', $node);
 
   if ($type->has_title) {
@@ -244,12 +252,12 @@ function custom_teasers_form(&$node) {
 
   $form['teaser_options']['reference_type'] = array(
     '#type' => 'radios',
-    '#default_value' => isset($node->reference_type) ? $node->reference_type : 'nid',
+    '#default_value' => isset($node->reference_type) ? $node->reference_type : CUSTOM_TEASERS_REF_NID,
     '#required' => TRUE,
     '#title' => t('Destination'),
     '#options' => array(
-      'nid' => t('Content'),
-      'rel' => t('Path'),
+      CUSTOM_TEASERS_REF_NID => t('Content'),
+      CUSTOM_TEASERS_REF_REL => t('Path'),
     ),
     '#prefix' => theme('advanced_help_topic', 'custom_teasers', 'reference-type'),
   );
@@ -277,7 +285,7 @@ function custom_teasers_form(&$node) {
     $form['teaser_options']['reference_nid']['#type'] = $form['teaser_options']['reference_type']['#type'] = 'value';
     unset($form['teaser_options']['reference_path']);
     $form['teaser_options']['reference_nid']['#value'] = $nid;
-    $form['teaser_options']['reference_type']['#value'] = 'nid';
+    $form['teaser_options']['reference_type']['#value'] = CUSTOM_TEASERS_REF_NID;
   }
 
   return $form;
@@ -289,10 +297,10 @@ function custom_teasers_form(&$node) {
  * Errors should be signaled with form_set_error().
  */
 function custom_teasers_validate(&$node) {
-  if ($node->reference_type == 'nid' && empty($node->reference_nid)) {
+  if ($node->reference_type == CUSTOM_TEASERS_REF_NID && empty($node->reference_nid)) {
     form_set_error('reference_nid', t('You must select the content this teaser links to.'));
   }
-  if ($node->reference_type == 'rel') {
+  if ($node->reference_type == CUSTOM_TEASERS_REF_REL) {
     // Strip slashes from the beginning and end of the reference_path
     $node->reference_path = trim($node->reference_path, '\\/');
     // Check to make sure it's not empty.
@@ -368,6 +376,44 @@ function custom_teasers_view($node, $teaser = FALSE, $page = FALSE) {
 }
 
 /**
+ * Implementation of hook_preprocess_node().
+ */
+function custom_teasers_preprocess_node(&$vars) {
+  $node = $vars['node'];
+  if ($node->type == 'teaser') {
+    $vars['node_url'] = url($node->reference_path);
+  }
+}
+
+/**
+ * Implementation of hook_link_alter().
+ */
+function custom_teasers_link_alter(&$links, $node) {
+  if ($node->type == 'teaser') {
+    if ($links['node_read_more']) {
+      $links['node_read_more']['href'] = $node->reference_path;
+    }
+
+    // Comments
+    if ($node->reference_type == CUSTOM_TEASER_REF_NID) {
+      if ($links['comment_add']) {
+        $links['comment_add']['href'] = 'comment/reply/'. $node->reference_nid;
+      }
+      $all = comment_num_all($node->reference_nid);
+      if ($all) {
+        $links['comment_comments']['title'] = format_plural($all, '1 comment', '@count comments');
+        $links['comment_comments']['href'] = "node/$node->reference_nid";
+      }
+    }
+    else {
+      unset($links['comment_add'], $links['comments_comment'], $links['comment_forbidden']);
+    }
+    // We'll just kill the new comments for now, to avoid having to load the referenced node.
+    unset($links['comment_new_comments']);
+  }
+}
+
+/**
  * Load all teaser nodes by reference nid.
  */
 function custom_teasers_nodes_load($nid) {
@@ -393,11 +439,11 @@ function custom_teasers_update_weight($nid, $weight) {
  */
 function _custom_teasers_reference_format(&$node) {  
   switch($node->reference_type) {
-    case 'rel':
+    case CUSTOM_TEASERS_REF_REL:
       $node->reference_nid = 0;
       break;
 
-    case 'nid':
+    case CUSTOM_TEASERS_REF_NID:
       $node->reference_path = 'node/'. $node->reference_nid;
       break;
   }
@@ -461,7 +507,7 @@ function _custom_teasers_node_form_js() {
   }
 
   if (!empty($settings)) {
-    drupal_add_js(drupal_get_path('module', 'custom_teasers') .'/custom_teasers.js', 'module');
+    drupal_add_js(drupal_get_path('module', 'custom_teasers_views') .'/custom_teasers_views.js', 'module');
     drupal_add_js(array('custom_teasers' => $settings), 'setting');
   }
 }
