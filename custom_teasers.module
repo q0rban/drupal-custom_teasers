@@ -7,7 +7,7 @@
  */
 
 /**
- * Define our reference types.
+ * Define some reference types.
  */
 define('CUSTOM_TEASERS_REF_REL', 'rel');
 define('CUSTOM_TEASERS_REF_NID', 'nid');
@@ -78,7 +78,6 @@ function custom_teasers_views_theme() {
 
 
 /**
- *
  * Arranges teaser nodes in a table.
  *
  * @ingroup themeable
@@ -395,7 +394,7 @@ function custom_teasers_link_alter(&$links, $node) {
     }
 
     // Comments
-    if ($node->reference_type == CUSTOM_TEASER_REF_NID) {
+    if ($node->reference_type == CUSTOM_TEASERS_REF_NID) {
       if ($links['comment_add']) {
         $links['comment_add']['href'] = 'comment/reply/'. $node->reference_nid;
       }
