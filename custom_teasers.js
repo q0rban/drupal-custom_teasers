@@ -16,7 +16,7 @@ $(function() {
     }
   });
 
-  $('input[id^=edit-feature-name-]:checked, input[id^=edit-reference-type-]:checked').change();
+  $('input[id^=edit-reference-type-]:checked').change();
 
 });
 

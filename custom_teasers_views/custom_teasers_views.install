@@ -31,7 +31,7 @@ function custom_teasers_views_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => 'custom_teasers',
+        'default' => 'custom_teasers_views',
         'description' => t("The name of the module that generated the {custom_teasers_views} item.")
       ),
       'title' => array(

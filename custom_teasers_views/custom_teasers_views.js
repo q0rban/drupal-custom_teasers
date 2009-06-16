@@ -18,11 +18,11 @@ function limitChars(textid, limit, infodiv) {
   }
 }
 
-function fieldLimit(feature, featureName) {
-  var inputId = 'input#edit-feature-name-' + featureName;
-  $.each(feature, function(fieldName, settings) {
+function fieldLimit(view, viewName) {
+  var inputId = 'input#edit-view-name-' + viewName;
+  $.each(view, function(fieldName, settings) {
     var textId = 'edit-' + fieldName;
-    var infoDiv = 'features-' + textId + '-wrapper';
+    var infoDiv = 'teaser-views-' + textId + '-wrapper';
 
     $('#' + textId).keyup(function() {
       if ($(inputId + ':checked').val()) {
@@ -39,19 +39,20 @@ $(function() {
   // Add our infoDiv to each input & textarea element
   $('.form-text, .form-textarea').each(function() {
     var wrapperId = $(this).attr('id') + '-wrapper';
-    var featureId = 'features-' + wrapperId;
+    var viewId = 'teaser-views-' + wrapperId;
 
-    $('#' + wrapperId).append('<div class="features-limitchars" id="' + featureId + '"></div>');
+    $('#' + wrapperId).append('<div class="teaser-views-limitchars" id="' + viewId + '"></div>');
   });
 
-  // Pull in our features object from the drupal settings.
-  var custom_teasers = Drupal.settings.custom_teasers;
+  // Pull in our views object from the drupal settings.
+  var custom_teasers_views = Drupal.settings.custom_teasers_views;
 
   // If there's already one checked, run our fieldLimit fnc on it.
-  $('input[id^=edit-feature-name-]').change(function() {
-    var featureName = $(this).val();
-    fieldLimit(custom_teasers[featureName], featureName);
+  $('input[id^=edit-view-name-]').change(function() {
+    var viewName = $(this).val();
+    fieldLimit(custom_teasers_views[viewName], viewName);
   });
 
+  $('input[id^=edit-view-name-]').change();
 });
 
