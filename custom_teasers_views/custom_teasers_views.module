@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: custom_teasers_views.module,v 1.2 2009/06/17 15:35:48 q0rban Exp $
 
 /**
  * @file
@@ -192,7 +192,8 @@ function custom_teasers_views_theme() {
   );
   $items['custom_teasers_views_node_sort_form'] = array(
     'arguments' => array('form' => array()),
-    'file' => 'custom_teasers.pages.inc',
+    'file' => 'custom_teasers_views.pages.inc',
+    'path' => $path,
   );
 
   return $items;

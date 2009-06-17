@@ -1,4 +1,4 @@
-// $Id$
+// $Id: custom_teasers_views.js,v 1.1 2009/06/16 21:51:04 q0rban Exp $
 
 function limitChars(textid, limit, infodiv) {
   var text = $('#' + textid).val(); 

@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: custom_teasers_views_handler_field_node_link.inc,v 1.1 2009/06/16 21:51:04 q0rban Exp $
 /**
  * Field handler to present a link to the referenced node.
  */

@@ -1,4 +1,4 @@
-; $Id$
+; $Id: custom_teasers_views.info,v 1.1 2009/06/16 21:51:04 q0rban Exp $
 name = Custom Teaser Views
 description = Add views functionality to Custom Teasers.
 dependencies[] = views

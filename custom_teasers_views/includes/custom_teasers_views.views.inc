@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: custom_teasers_views.views.inc,v 1.1 2009/06/16 21:51:04 q0rban Exp $
 /**
  * @file
  * Provide views data and handlers for custom_teasers_views.module
